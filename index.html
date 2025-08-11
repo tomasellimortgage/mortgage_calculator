@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .primary-dark { background-color: #25306E; }
+        .primary-light { background-color: #92B1DD; }
+        .text-primary-dark { color: #25306E; }
+        .border-primary-dark { border-color: #25306E; }
+        .input-field {
+            @apply w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out;
+        }
+        .label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        .card {
+            @apply bg-white p-6 rounded-xl shadow-lg border border-gray-200;
+        }
+        .alert-red {
+            @apply bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md my-2;
+        }
+        .surplus-green {
+            @apply text-green-600 font-bold;
+        }
+        .shortfall-red {
+            @apply text-red-600 font-bold;
+        }
+        h2 {
+            @apply text-2xl font-bold text-primary-dark mb-4;
+        }
+        h3 {
+             @apply text-xl font-semibold text-primary-dark mb-3;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-primary-dark">Mortgage Qualification Calculator</h1>
+            <p class="text-lg text-gray-600 mt-2">Estimate what you can afford and compare loan options.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Inputs -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="card">
+                    <h2>Your Financial Profile</h2>
+                    <div>
+                        <label for="monthlyIncome" class="label">Monthly Income (Pre-tax)</label>
+                        <input type="number" id="monthlyIncome" class="input-field" value="8000">
+                    </div>
+                    <div>
+                        <label for="monthlyDebts" class="label">Total Monthly Debts</label>
+                        <input type="number" id="monthlyDebts" class="input-field" value="500">
+                    </div>
+                     <div>
+                        <label for="availableCash" class="label">Available Cash to Close</label>
+                        <input type="number" id="availableCash" class="input-field" value="50000">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Home & Loan Details</h2>
+                    <div>
+                        <label for="purchasePrice" class="label">Purchase Price</label>
+                        <input type="number" id="purchasePrice" class="input-field" value="400000">
+                    </div>
+                    <div>
+                        <label for="downPayment" class="label">Down Payment</label>
+                        <input type="number" id="downPayment" class="input-field" value="20000">
+                    </div>
+                    <div>
+                        <label for="propertyTaxes" class="label">Annual Property Taxes</label>
+                        <input type="number" id="propertyTaxes" class="input-field" value="4800">
+                    </div>
+                    <div>
+                        <label for="hoaFee" class="label">Monthly HOA Fee</label>
+                        <input type="number" id="hoaFee" class="input-field" value="0">
+                    </div>
+                     <div>
+                        <label for="sellerCredit" class="label">Seller Credit</label>
+                        <input type="number" id="sellerCredit" class="input-field" value="7500">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Guidelines</h2>
+                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-2">
+                        <li><strong>FHA Max Ratios:</strong> Housing 46.999%, DTI 56.999%</li>
+                        <li><strong>FHA Min Down Payment:</strong> 3.5%</li>
+                        <li><strong>FHA Max Seller Credits:</strong> 6%</li>
+                        <li><strong>Conventional Max Ratios:</strong> Housing 44.999%, DTI 49.999%</li>
+                        <li><strong>Conventional Min Down Payment:</strong> 5% (can be 3% in some cases)</li>
+                        <li><strong>Conventional Seller Credits:</strong> 3% (LTV > 90%), 6% (LTV 75-90%), 9% (LTV <= 75%)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- FHA Loan Card -->
+                    <div id="fha-card" class="card"></div>
+                    <!-- Conventional Loan Card -->
+                    <div id="conventional-card" class="card"></div>
+                </div>
+                <div id="affordability-analysis" class="card"></div>
+            </div>
+        </div>
+        
+        <footer class="text-center mt-12 text-xs text-gray-500">
+             <div class="mb-4">
+                <p class="font-bold">Steve Tomaselli, NMLS #358920</p>
+                <p>Edge Home Finance, NMLS #891464</p>
+            </div>
+            <p class="mb-2"><strong>Disclaimer:</strong> The calculations provided are estimates for informational purposes only and do not constitute a loan offer or guarantee of approval. Actual loan terms may vary. Please consult with a qualified loan officer for personalized advice.</p>
+            <p class="mb-2">FHA and Conventional loan programs have specific requirements not fully captured here. UFMIP/MIP for FHA and PMI for Conventional loans are subject to change. Interest rates are subject to change based on market conditions and borrower qualifications.</p>
+            <div class="flex justify-center items-center space-x-4">
+                <p>Equal Housing Opportunity</p>
+                <a href="https://edgehomefinance.com/licensing-disclaimer/" target="_blank" class="text-blue-600 hover:underline">Licensing & Disclaimer</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const inputs = {
+            monthlyIncome: document.getElementById('monthlyIncome'),
+            monthlyDebts: document.getElementById('monthlyDebts'),
+            purchasePrice: document.getElementById('purchasePrice'),
+            downPayment: document.getElementById('downPayment'),
+            propertyTaxes: document.getElementById('propertyTaxes'),
+            hoaFee: document.getElementById('hoaFee'),
+            availableCash: document.getElementById('availableCash'),
+            sellerCredit: document.getElementById('sellerCredit'),
+        };
+
+        const outputs = {
+            fhaCard: document.getElementById('fha-card'),
+            conventionalCard: document.getElementById('conventional-card'),
+            affordabilityAnalysis: document.getElementById('affordability-analysis'),
+        };
+
+        // --- Constants & Configuration ---
+        const config = {
+            fha: {
+                name: 'FHA Loan',
+                minDownPaymentPercent: 0.035,
+                baseRate: 6.25,
+                ufmipPercent: 0.0175,
+                mipPercentAnnual: 0.0055, // Updated to a more common rate
+                housingRatioLimit: 0.46999,
+                dtiRatioLimit: 0.56999,
+                maxSellerCreditPercent: 0.06,
+            },
+            conventional: {
+                name: 'Conventional Loan',
+                minDownPaymentPercent: 0.05,
+                baseRate: 6.50,
+                pmiThreshold: 0.80,
+                housingRatioLimit: 0.44999,
+                dtiRatioLimit: 0.49999,
+            },
+            homeownersInsuranceAnnualPercent: 0.004,
+            baseClosingCosts: 7500,
+            rateAdjustmentIncrement: 0.125,
+            closingCostPerPointPercent: 0.005,
+        };
+        
+        let fhaRatePoints = 0;
+        let convRatePoints = 0;
+
+        // --- Core Calculation Logic ---
+        function calculateMortgage() {
+            // 1. Get all input values
+            const monthlyIncome = parseFloat(inputs.monthlyIncome.value) || 0;
+            const monthlyDebts = parseFloat(inputs.monthlyDebts.value) || 0;
+            const purchasePrice = parseFloat(inputs.purchasePrice.value) || 0;
+            const downPayment = parseFloat(inputs.downPayment.value) || 0;
+            const annualPropertyTaxes = parseFloat(inputs.propertyTaxes.value) || 0;
+            const monthlyHoaFee = parseFloat(inputs.hoaFee.value) || 0;
+            const availableCash = parseFloat(inputs.availableCash.value) || 0;
+            const sellerCredit = parseFloat(inputs.sellerCredit.value) || 0;
+
+            if (purchasePrice <= 0) {
+                outputs.fhaCard.innerHTML = `<h3>Enter a valid purchase price.</h3>`;
+                outputs.conventionalCard.innerHTML = `<h3>Enter a valid purchase price.</h3>`;
+                outputs.affordabilityAnalysis.innerHTML = '';
+                return;
+            }
+
+            // 2. Calculate shared values
+            const loanAmount = purchasePrice - downPayment;
+            const ltv = loanAmount / purchasePrice;
+            const monthlyPropertyTaxes = annualPropertyTaxes / 12;
+            const monthlyHomeownersInsurance = (purchasePrice * config.homeownersInsuranceAnnualPercent) / 12;
+
+            // 3. Calculate for each loan type
+            const fhaResults = calculateLoanScenario('fha', fhaRatePoints, loanAmount, purchasePrice, ltv, monthlyIncome, monthlyDebts, monthlyPropertyTaxes, monthlyHomeownersInsurance, monthlyHoaFee, downPayment, availableCash, sellerCredit);
+            const conventionalResults = calculateLoanScenario('conventional', convRatePoints, loanAmount, purchasePrice, ltv, monthlyIncome, monthlyDebts, monthlyPropertyTaxes, monthlyHomeownersInsurance, monthlyHoaFee, downPayment, availableCash, sellerCredit);
+
+            // 4. Render results
+            renderCard(outputs.fhaCard, fhaResults);
+            renderCard(outputs.conventionalCard, conventionalResults);
+            renderAffordabilityAnalysis(fhaResults, conventionalResults, monthlyIncome, monthlyDebts, availableCash);
+        }
+        
+        function calculateLoanScenario(type, ratePoints, loanAmount, purchasePrice, ltv, monthlyIncome, monthlyDebts, monthlyTaxes, monthlyInsurance, monthlyHoa, downPayment, availableCash, sellerCredit) {
+            const spec = config[type];
+            let warnings = [];
+            
+            // Interest Rate
+            const interestRate = spec.baseRate - (ratePoints * config.rateAdjustmentIncrement);
+            const monthlyInterestRate = (interestRate / 100) / 12;
+
+            // Principal & Interest (P&I)
+            const numberOfPayments = 360; // 30 years
+            const principalAndInterest = loanAmount > 0 && monthlyInterestRate > 0
+                ? loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
+                : 0;
+
+            // Mortgage Insurance & Closing Costs
+            let monthlyMI = 0;
+            let closingCosts = config.baseClosingCosts + (ratePoints * config.closingCostPerPointPercent * loanAmount);
+            let upfrontMI = 0;
+            
+            if (type === 'fha') {
+                upfrontMI = loanAmount * config.fha.ufmipPercent;
+                const fhaLoanAmountWithUFMIP = loanAmount + upfrontMI;
+                 const fhaPAndI = fhaLoanAmountWithUFMIP * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+                monthlyMI = (loanAmount * config.fha.mipPercentAnnual) / 12;
+            } else { // Conventional
+                if (ltv > config.conventional.pmiThreshold) {
+                    // Simplified PMI calculation. Real PMI varies greatly.
+                    monthlyMI = (loanAmount * 0.005) / 12; 
+                }
+            }
+
+            // Total Payment & Ratios
+            const totalMonthlyPayment = principalAndInterest + monthlyTaxes + monthlyInsurance + monthlyMI + monthlyHoa;
+            const housingRatio = monthlyIncome > 0 ? totalMonthlyPayment / monthlyIncome : 0;
+            const dtiRatio = monthlyIncome > 0 ? (totalMonthlyPayment + monthlyDebts) / monthlyIncome : 0;
+
+            // Cash to Close
+            const totalCashToClose = downPayment + closingCosts + upfrontMI - sellerCredit;
+            const cashAnalysis = availableCash - totalCashToClose;
+
+            // --- Warnings ---
+            if (downPayment < purchasePrice * spec.minDownPaymentPercent) {
+                warnings.push(`Down payment is below the ${spec.minDownPaymentPercent * 100}% minimum.`);
+            }
+            if (housingRatio > spec.housingRatioLimit) {
+                warnings.push(`Housing ratio exceeds the ${ (spec.housingRatioLimit * 100).toFixed(3) }% limit.`);
+            }
+            if (dtiRatio > spec.dtiRatioLimit) {
+                warnings.push(`DTI ratio exceeds the ${ (spec.dtiRatioLimit * 100).toFixed(3) }% limit.`);
+            }
+            
+            // Seller Credit Warnings
+            if (type === 'fha' && sellerCredit > purchasePrice * config.fha.maxSellerCreditPercent) {
+                 warnings.push(`Seller credit exceeds the ${config.fha.maxSellerCreditPercent * 100}% FHA limit.`);
+            }
+            if (type === 'conventional') {
+                if (ltv > 0.90 && sellerCredit > purchasePrice * 0.03) {
+                     warnings.push(`Seller credit exceeds the 3% limit for LTV > 90%.`);
+                } else if (ltv > 0.75 && ltv <= 0.90 && sellerCredit > purchasePrice * 0.06) {
+                     warnings.push(`Seller credit exceeds the 6% limit for LTV between 75.01-90%.`);
+                } else if (ltv <= 0.75 && sellerCredit > purchasePrice * 0.09) {
+                     warnings.push(`Seller credit exceeds the 9% limit for LTV <= 75%.`);
+                }
+            }
+            
+            const isQualified = warnings.length === 0 && cashAnalysis >= 0;
+
+            return { type, name: spec.name, loanAmount, ltv, interestRate, principalAndInterest, monthlyMI, totalMonthlyPayment, housingRatio, dtiRatio, totalCashToClose, cashAnalysis, warnings, isQualified, ratePoints };
+        }
+
+        // --- Rendering Logic ---
+        function renderCard(element, data) {
+            const { name, loanAmount, ltv, interestRate, principalAndInterest, monthlyMI, totalMonthlyPayment, housingRatio, dtiRatio, totalCashToClose, cashAnalysis, warnings, isQualified, type, ratePoints } = data;
+            
+            const cashStatusClass = cashAnalysis >= 0 ? 'surplus-green' : 'shortfall-red';
+            const cashStatusText = cashAnalysis >= 0 ? 'Surplus' : 'Shortfall';
+
+            let html = `
+                <div class="flex justify-between items-center mb-4">
+                     <h3 class="text-xl font-bold ${isQualified ? 'text-green-600' : 'text-red-600'}">${name} - ${isQualified ? 'Qualified' : 'Not Qualified'}</h3>
+                </div>
+                
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span>Loan Amount:</span> <strong>${formatCurrency(loanAmount)}</strong></div>
+                    <div class="flex justify-between"><span>Loan-to-Value (LTV):</span> <strong>${(ltv * 100).toFixed(2)}%</strong></div>
+                    
+                    <div class="flex justify-between items-center pt-2 border-t">
+                        <span>Interest Rate:</span>
+                        <div class="flex items-center space-x-2">
+                            <button class="rate-btn primary-light text-white rounded-full w-6 h-6" data-type="${type}" data-change="-1">-</button>
+                            <strong>${interestRate.toFixed(3)}%</strong>
+                            <button class="rate-btn primary-light text-white rounded-full w-6 h-6" data-type="${type}" data-change="1">+</button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between"><span>P&I:</span> <strong>${formatCurrency(principalAndInterest)}</strong></div>
+                    <div class="flex justify-between"><span>Mortgage Insurance:</span> <strong>${formatCurrency(monthlyMI)}</strong></div>
+                    <div class="border-t my-2"></div>
+                    <div class="flex justify-between text-base font-bold"><span>Total Monthly Pmt:</span> <span>${formatCurrency(totalMonthlyPayment)}</span></div>
+                    
+                    <div class="border-t my-2 pt-2 space-y-2">
+                        <div class="flex justify-between"><span>Housing Ratio:</span> <strong class="${housingRatio > config[type].housingRatioLimit ? 'text-red-500' : ''}">${(housingRatio * 100).toFixed(2)}%</strong></div>
+                        <div class="flex justify-between"><span>DTI Ratio:</span> <strong class="${dtiRatio > config[type].dtiRatioLimit ? 'text-red-500' : ''}">${(dtiRatio * 100).toFixed(2)}%</strong></div>
+                    </div>
+                    
+                    <div class="border-t my-2 pt-2 space-y-2">
+                        <div class="flex justify-between"><span>Est. Cash to Close:</span> <strong>${formatCurrency(totalCashToClose)}</strong></div>
+                        <div class="flex justify-between"><span>Cash Analysis:</span> <strong class="${cashStatusClass}">${formatCurrency(Math.abs(cashAnalysis))} ${cashStatusText}</strong></div>
+                    </div>
+                </div>
+            `;
+
+            if (warnings.length > 0) {
+                html += `<div class="mt-4 space-y-2">`;
+                warnings.forEach(warning => {
+                    html += `<div class="alert-red">${warning}</div>`;
+                });
+                html += `</div>`;
+            }
+            
+            element.innerHTML = html;
+        }
+        
+        function renderAffordabilityAnalysis(fha, conv, income, debts, cash) {
+            let html = `<h2>Affordability Analysis</h2>`;
+            let limitingFactors = new Set();
+            
+            if (!fha.isQualified) {
+                if (fha.housingRatio > config.fha.housingRatioLimit) limitingFactors.add('Housing Ratio');
+                if (fha.dtiRatio > config.fha.dtiRatioLimit) limitingFactors.add('DTI Ratio');
+                if (fha.cashAnalysis < 0) limitingFactors.add('Cash to Close');
+            }
+             if (!conv.isQualified) {
+                if (conv.housingRatio > config.conventional.housingRatioLimit) limitingFactors.add('Housing Ratio');
+                if (conv.dtiRatio > config.conventional.dtiRatioLimit) limitingFactors.add('DTI Ratio');
+                if (conv.cashAnalysis < 0) limitingFactors.add('Cash to Close');
+            }
+
+            if (limitingFactors.size === 0 && fha.isQualified && conv.isQualified) {
+                html += `<p class="text-green-600 font-semibold">Congratulations! You currently appear to qualify under both loan programs based on the data provided.</p>`;
+            } else {
+                html += `<p class="text-red-600 font-semibold">Your ability to qualify for a higher purchase price may be limited by the following:</p>
+                         <ul class="list-disc list-inside my-3 space-y-1">
+                            ${Array.from(limitingFactors).map(factor => `<li>${factor}</li>`).join('')}
+                         </ul>`;
+                
+                html += `<h3>Improvement Strategies:</h3><div class="text-sm space-y-2">`;
+
+                if (limitingFactors.has('DTI Ratio') || limitingFactors.has('Housing Ratio')) {
+                    const targetDTI = Math.min(config.fha.dtiRatioLimit, config.conventional.dtiRatioLimit);
+                    const currentTotalDebt = fha.totalMonthlyPayment + debts;
+                    const requiredIncome = currentTotalDebt / targetDTI;
+                    const requiredDebtReduction = currentTotalDebt - (income * targetDTI);
+
+                    html += `<p><strong>Increase Income:</strong> To meet a ${ (targetDTI*100).toFixed(1) }% DTI ratio, your monthly income would need to be around ${formatCurrency(requiredIncome)} (an increase of ${formatCurrency(requiredIncome - income)}).</p>`;
+                    if (requiredDebtReduction > 0) {
+                        html += `<p><strong>Reduce Debt:</strong> Alternatively, reducing your total monthly debts by approximately ${formatCurrency(requiredDebtReduction)} could help you qualify.</p>`;
+                    }
+                }
+                if (limitingFactors.has('Cash to Close')) {
+                    const cashShortfall = Math.max(fha.cashAnalysis < 0 ? -fha.cashAnalysis : 0, conv.cashAnalysis < 0 ? -conv.cashAnalysis : 0);
+                    html += `<p><strong>Increase Cash:</strong> You have a cash shortfall of about ${formatCurrency(cashShortfall)}. Increasing your available cash or seeking a larger seller credit could resolve this.</p>`;
+                }
+                
+                html += `<p><strong>Lower Purchase Price:</strong> Reducing the purchase price is the most direct way to lower the monthly payment, ratios, and cash needed to close.</p></div>`;
+            }
+            
+            outputs.affordabilityAnalysis.innerHTML = html;
+        }
+
+        // --- Utility Functions ---
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        }
+
+        // --- Event Listeners ---
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', calculateMortgage);
+        });
+        
+        document.body.addEventListener('click', function(e) {
+            if (e.target.classList.contains('rate-btn')) {
+                const type = e.target.dataset.type;
+                const change = parseInt(e.target.dataset.change);
+                if (type === 'fha') {
+                    fhaRatePoints += change;
+                } else if (type === 'conventional') {
+                    convRatePoints += change;
+                }
+                calculateMortgage();
+            }
+        });
+
+        // --- Initial Calculation ---
+        window.onload = calculateMortgage;
+    </script>
+</body>
+</html>
