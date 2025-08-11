@@ -236,25 +236,28 @@
             const interestRate = spec.baseRate - (ratePoints * config.rateAdjustmentIncrement);
             const monthlyInterestRate = (interestRate / 100) / 12;
 
-            // Principal & Interest (P&I)
-            const numberOfPayments = 360; // 30 years
-            const principalAndInterest = loanAmount > 0 && monthlyInterestRate > 0
-                ? loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
-                : 0;
-
-            // Mortgage Insurance & Closing Costs
+            let principalAndInterest;
             let monthlyMI = 0;
             let closingCosts = config.baseClosingCosts + (ratePoints * config.closingCostPerPointPercent * loanAmount);
             let upfrontMI = 0;
-            
+            let finalLoanAmountForPI = loanAmount;
+
             if (type === 'fha') {
                 upfrontMI = loanAmount * config.fha.ufmipPercent;
+                // For FHA, the P&I is calculated on the loan amount PLUS the financed UFMIP.
+                finalLoanAmountForPI += upfrontMI;
                 monthlyMI = (loanAmount * config.fha.mipPercentAnnual) / 12;
             } else { // Conventional
                 if (ltv > config.conventional.pmiThreshold) {
                     monthlyMI = (loanAmount * 0.005) / 12; 
                 }
             }
+
+            // Principal & Interest (P&I) - Calculated now with the correct final amount for each loan type
+            const numberOfPayments = 360; // 30 years
+            principalAndInterest = finalLoanAmountForPI > 0 && monthlyInterestRate > 0
+                ? finalLoanAmountForPI * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
+                : 0;
 
             // Total Payment & Ratios
             const totalMonthlyPayment = principalAndInterest + monthlyTaxes + monthlyInsurance + monthlyMI + monthlyHoa;
@@ -309,7 +312,7 @@
                 
                 <div class="input-group">
                     <label for="${type}DownPayment" class="label">Down Payment</label>
-                    <input type="number" id="${type}DownPayment" class="input-field down-payment-input" value="${Math.round(downPaymentValue)}">
+                    <input type="number" id="${type}DownPayment" class="input-field down-payment-input" value="${downPaymentValue}">
                 </div>
                 
                 <div class="space-y-3 text-sm mt-4">
@@ -423,7 +426,6 @@
             }
         });
 
-        // BUG FIX: Changed 'input' to 'change' to prevent re-rendering on every keystroke.
         document.body.addEventListener('change', function(e) {
             if (e.target.classList.contains('down-payment-input')) {
                 calculateMortgage();
